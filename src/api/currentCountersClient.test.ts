@@ -1,0 +1,81 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  buildCurrentCountersUrl,
+  createBasicAuthHeader,
+  fetchCurrentCounters,
+} from './currentCountersClient';
+
+describe('current counters client', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it('creates URL from host and port', () => {
+    expect(buildCurrentCountersUrl('192.168.0.197:8080')).toBe(
+      'http://192.168.0.197:8080/api/objects_counting/current_counters',
+    );
+  });
+
+  it('creates URL from address that already includes http protocol', () => {
+    expect(buildCurrentCountersUrl('http://192.168.0.197:8080')).toBe(
+      'http://192.168.0.197:8080/api/objects_counting/current_counters',
+    );
+  });
+
+  it('creates Basic Auth header for Root and empty password', () => {
+    expect(createBasicAuthHeader('Root', '')).toBe('Basic Um9vdDo=');
+  });
+
+  it('turns HTTP 500 into a readable error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+      }),
+    );
+
+    await expect(fetchCurrentCounters('192.168.0.197:8080')).rejects.toThrow(
+      'Camera API returned HTTP 500 Internal Server Error.',
+    );
+  });
+
+  it('turns timeout into a readable error', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () => {
+              reject(new DOMException('The operation was aborted.', 'AbortError'));
+            });
+          }),
+      ),
+    );
+
+    const request = fetchCurrentCounters('192.168.0.197:8080', 1000);
+    await vi.advanceTimersByTimeAsync(1000);
+
+    await expect(request).rejects.toThrow('Camera API request timed out after 1000 ms.');
+  });
+
+  it('turns invalid JSON into a readable error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: vi.fn().mockRejectedValue(new SyntaxError('Unexpected token')),
+      }),
+    );
+
+    await expect(fetchCurrentCounters('192.168.0.197:8080')).rejects.toThrow(
+      'Camera API returned invalid JSON.',
+    );
+  });
+});
