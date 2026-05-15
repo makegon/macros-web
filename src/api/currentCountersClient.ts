@@ -1,7 +1,7 @@
 import type { CurrentCountersResponse } from './types';
 
 const CURRENT_COUNTERS_PATH = '/api/objects_counting/current_counters';
-const DEFAULT_TIMEOUT_MS = 5000;
+const DEFAULT_TIMEOUT_MS = 15000;
 
 export function buildCurrentCountersUrl(server: string): string {
   const normalizedServer = server.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');

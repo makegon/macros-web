@@ -122,6 +122,28 @@ describe('current counters client', () => {
     await request;
   });
 
+  it('uses 15000 ms as the default timeout', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () => {
+              reject(new DOMException('The operation was aborted.', 'AbortError'));
+            });
+          }),
+      ),
+    );
+
+    const request = expect(fetchCurrentCounters('192.168.0.197:8080')).rejects.toThrow(
+      'Camera API request timed out after 15000 ms.',
+    );
+    await vi.advanceTimersByTimeAsync(15000);
+
+    await request;
+  });
+
   it('turns invalid JSON into a readable error', async () => {
     vi.stubGlobal(
       'fetch',
