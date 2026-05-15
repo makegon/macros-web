@@ -20,10 +20,22 @@ export function createBasicAuthHeader(username: string, password: string): strin
 export async function fetchCurrentCounters(
   server: string,
   timeoutMs = DEFAULT_TIMEOUT_MS,
+  externalSignal?: AbortSignal,
 ): Promise<CurrentCountersResponse> {
   const url = buildCurrentCountersUrl(server);
   const controller = new AbortController();
-  const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+  let didTimeout = false;
+  const abortRequest = () => controller.abort();
+  const timeoutId = globalThis.setTimeout(() => {
+    didTimeout = true;
+    controller.abort();
+  }, timeoutMs);
+
+  if (externalSignal?.aborted) {
+    controller.abort();
+  } else {
+    externalSignal?.addEventListener('abort', abortRequest, { once: true });
+  }
 
   try {
     const response = await fetch(url, {
@@ -49,6 +61,10 @@ export async function fetchCurrentCounters(
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
+        if (!didTimeout && externalSignal?.aborted) {
+          throw new Error('Camera API request was cancelled.');
+        }
+
         throw new Error(`Camera API request timed out after ${timeoutMs} ms.`);
       }
 
@@ -65,5 +81,6 @@ export async function fetchCurrentCounters(
     throw new Error('Network error while requesting camera API.');
   } finally {
     globalThis.clearTimeout(timeoutId);
+    externalSignal?.removeEventListener('abort', abortRequest);
   }
 }

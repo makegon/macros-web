@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { aggregateInOut } from './domain/aggregation';
 import {
   applyCounters,
@@ -6,13 +6,12 @@ import {
   resetCounter,
   type AggregatedCounters,
 } from './domain/personCounter';
-import { fetchCurrentCounters } from './api/currentCountersClient';
 import { loadAppState, saveAppState, type AppPersistedState } from './storage/appStorage';
+import { useCurrentCountersPolling } from './hooks/useCurrentCountersPolling';
+import type { CurrentCountersResponse } from './api/types';
 
 const DEFAULT_SERVER = '192.168.0.197:8080';
 const POLLING_INTERVAL_MS = 5000;
-
-type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
 function formatDateTime(value: Date | null): string {
   if (!value) {
@@ -46,12 +45,10 @@ function App() {
   const [latestCounters, setLatestCounters] = useState<AggregatedCounters | null>(
     storedState?.latestCounters ?? null,
   );
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
-  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [localError, setLocalError] = useState<string | null>(null);
   const [pollingServer, setPollingServer] = useState<string | null>(null);
-  const [pollingRun, setPollingRun] = useState(0);
-  const requestInFlightRef = useRef(false);
+  const [pollingEnabled, setPollingEnabled] = useState(false);
+  const [reconnectSuffix, setReconnectSuffix] = useState('');
 
   useEffect(() => {
     saveAppState({
@@ -62,90 +59,59 @@ function App() {
     });
   }, [counterState, latestCounters, resetCount, server]);
 
-  useEffect(() => {
-    if (!pollingServer) {
-      return;
-    }
+  const handlePollingSuccess = useCallback((response: CurrentCountersResponse) => {
+    const counters = aggregateInOut(response);
 
-    let isStopped = false;
+    setLatestCounters(counters);
+    setCounterState((currentState) => applyCounters(currentState, counters));
+    setLocalError(null);
+  }, []);
 
-    const poll = async () => {
-      if (requestInFlightRef.current) {
-        return;
-      }
+  const handlePollingError = useCallback(() => {
+    setLocalError(null);
+  }, []);
 
-      requestInFlightRef.current = true;
-      setConnectionStatus((currentStatus) =>
-        currentStatus === 'connected' ? 'connected' : 'connecting',
-      );
-
-      try {
-        const response = await fetchCurrentCounters(pollingServer);
-
-        if (isStopped) {
-          return;
-        }
-
-        const counters = aggregateInOut(response);
-
-        setLatestCounters(counters);
-        setCounterState((currentState) => applyCounters(currentState, counters));
-        setLastUpdateTime(new Date());
-        setErrorMessage('');
-        setConnectionStatus('connected');
-      } catch (error) {
-        if (isStopped) {
-          return;
-        }
-
-        setConnectionStatus('error');
-        setErrorMessage(error instanceof Error ? error.message : 'Unknown connection error.');
-      } finally {
-        requestInFlightRef.current = false;
-      }
-    };
-
-    void poll();
-    const intervalId = globalThis.setInterval(() => {
-      void poll();
-    }, POLLING_INTERVAL_MS);
-
-    return () => {
-      isStopped = true;
-      requestInFlightRef.current = false;
-      globalThis.clearInterval(intervalId);
-    };
-  }, [pollingRun, pollingServer]);
+  const pollingState = useCurrentCountersPolling({
+    server: pollingServer ? `${pollingServer}${reconnectSuffix}` : server,
+    enabled: pollingEnabled && pollingServer !== null,
+    intervalMs: POLLING_INTERVAL_MS,
+    onSuccess: handlePollingSuccess,
+    onError: handlePollingError,
+  });
 
   const handleConnect = () => {
-    const normalizedServer = server.trim();
+    const normalizedServer = server.trim().replace(/\/+$/, '');
 
     if (!normalizedServer) {
-      setConnectionStatus('error');
-      setErrorMessage('Server address is required.');
+      setLocalError('Server address is required.');
       setPollingServer(null);
+      setPollingEnabled(false);
       return;
     }
 
     setServer(normalizedServer);
-    setErrorMessage('');
-    setConnectionStatus('connecting');
+    setLocalError(null);
     setPollingServer(normalizedServer);
-    setPollingRun((currentRun) => currentRun + 1);
+    setReconnectSuffix((currentSuffix) => (currentSuffix === '' ? '/' : ''));
+    setPollingEnabled(true);
   };
 
   const handleReset = () => {
     const parsedResetCount = parseResetCount(resetCount);
 
     if (parsedResetCount === null) {
-      setErrorMessage('Reset count must be a valid number.');
+      setLocalError('Reset count must be a valid number.');
       return;
     }
 
     setCounterState((currentState) =>
       resetCounter(currentState, parsedResetCount, latestCounters ?? undefined),
     );
+    setLocalError(null);
   };
+
+  const displayedStatus = localError ? 'error' : pollingState.status;
+  const displayedError = localError ?? pollingState.error;
 
   return (
     <main className="app-shell">
@@ -202,13 +168,13 @@ function App() {
 
         <div className="status-grid" aria-label="Connection status">
           <span>Connection status</span>
-          <strong className={`status-pill status-${connectionStatus}`}>{connectionStatus}</strong>
+          <strong className={`status-pill status-${displayedStatus}`}>{displayedStatus}</strong>
 
           <span>Last update time</span>
-          <strong>{formatDateTime(lastUpdateTime)}</strong>
+          <strong>{formatDateTime(pollingState.lastUpdateAt)}</strong>
 
           <span>Error message</span>
-          <strong className={errorMessage ? 'error-message' : ''}>{errorMessage || '-'}</strong>
+          <strong className={displayedError ? 'error-message' : ''}>{displayedError || '-'}</strong>
         </div>
 
         <div className="diagnostics" aria-label="Diagnostics">
