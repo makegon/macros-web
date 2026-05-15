@@ -1,108 +1,120 @@
 # Building People Counter
 
-Offline-friendly React/Vite SPA for counting current building occupancy from a local camera API.
+## Назначение
 
-## Requirements
+Building People Counter — веб-приложение для расчета количества сотрудников в здании по событиям `IN` и `OUT` с камер наблюдения.
 
-- Node.js and npm installed before preparing the app.
-- Dependencies installed ahead of offline use.
-- Microsoft Edge or Google Chrome on the Windows computer that will run the built app.
-- Access from the browser to the camera server on the local network.
+Приложение опрашивает API камеры, получает абсолютные счетчики входа и выхода, вычисляет дельту между ответами и показывает текущее количество людей в здании.
 
-The app does not use CDN assets, external fonts, external images, or cloud services at runtime.
+## Стек
 
-## Install Dependencies
+- TypeScript
+- React
+- Vite
+- Vitest
 
-Run this once while npm packages are available:
+## Установка зависимостей
 
 ```bash
 npm install
 ```
 
-If `package-lock.json` is already present and you want an exact install, use:
-
-```bash
-npm ci
-```
-
-## Run In Development
+## Запуск в режиме разработки
 
 ```bash
 npm run dev
 ```
 
-Vite starts a local development server on `127.0.0.1`. Open the URL printed in the terminal.
-
-## Run Tests
+## Запуск тестов
 
 ```bash
 npm test
 ```
 
-## Build Static Files
+## Production build
 
 ```bash
 npm run build
 ```
 
-The production build is written to `dist/`. Vite is configured with `base: "./"` so built assets use relative paths and can load when `index.html` is opened from disk.
+После сборки готовые статические файлы находятся в папке `dist`.
 
-## Use On Windows
+## Запуск на Windows без интернета
 
-1. Build the app with `npm run build`.
-2. Copy the whole `dist/` folder to the Windows computer.
-3. Open `dist/index.html` in Microsoft Edge or Google Chrome.
-4. If the browser blocks camera HTTP requests because of `file://` or CORS restrictions, run the app through a local static server instead:
+1. Соберите проект:
 
 ```bash
-npm run preview
+npm run build
 ```
 
-Then open the preview URL shown in the terminal.
+2. Скопируйте папку `dist` на Windows-компьютер.
+3. Откройте файл `dist/index.html` в Microsoft Edge или Google Chrome.
 
-## Change Server
+Все зависимости должны быть установлены заранее через `npm install`. Во время работы приложение не использует CDN, внешние шрифты, внешние картинки или облачные сервисы.
 
-Use the `Server` input in the UI. The default value is:
+## Как пользоваться
+
+1. Введите адрес сервера в поле `Server`.
+2. Нажмите `OK`.
+3. Следите за значением `Person Counts`.
+4. При необходимости введите значение в `Reset Counts`.
+5. Нажмите `reset`, чтобы вручную установить текущий счетчик.
+
+## Как работает расчет
+
+Первый успешный ответ API устанавливает baseline:
+
+- `previousTotalIn = totalIn`
+- `previousTotalOut = totalOut`
+- `Person Counts` не меняется
+
+Следующие ответы используют дельты:
 
 ```text
-192.168.0.197:8080
+deltaIn = latestTotalIn - previousTotalIn
+deltaOut = latestTotalOut - previousTotalOut
+Person Counts = Person Counts + deltaIn - deltaOut
 ```
 
-Click `OK` to connect or reconnect. The app accepts values with or without protocol, for example `192.168.0.197:8080`, `http://192.168.0.197:8080`, or `https://192.168.0.197:8080`. Requests are sent to:
+После расчета baseline обновляется на последние значения API.
 
-```text
-http://{server}/api/objects_counting/current_counters
-```
+## Как работает reset
 
-## Reset Counter
+После нажатия `reset`:
 
-Enter a number in `Reset Counts` and click `reset`.
+- счетчик становится равным значению из `Reset Counts`;
+- если последние значения API уже получены, они становятся новым baseline;
+- дальнейшие расчеты идут от нового значения счетчика.
 
-The visible `Person Counts` value is set to that number. If latest camera totals are available, the app re-baselines from those totals so future deltas continue from the reset value.
+## Где хранится кэш
 
-## Local Cache
+Состояние приложения хранится в `localStorage` браузера.
 
-The app saves state in browser `localStorage` under this key:
+Кэш включает:
 
-```text
-building-person-counter-state-v1
-```
+- адрес сервера;
+- значение reset;
+- текущее состояние счетчика;
+- последние значения `Total IN` и `Total OUT`.
 
-Saved state includes:
+## Как очистить кэш
 
-- server address
-- reset value
-- current counter state
-- latest total IN and OUT counters
+Кэш можно очистить через DevTools браузера:
 
-## Clear Browser Cache
+1. Откройте DevTools клавишей `F12`.
+2. Перейдите во вкладку `Application`.
+3. Откройте раздел `Local Storage`.
+4. Выберите страницу приложения.
+5. Удалите запись `building-person-counter-state-v1`.
 
-To clear the app state in Edge or Chrome:
+Также можно очистить данные сайта через настройки браузера.
 
-1. Open DevTools with `F12`.
-2. Go to `Application`.
-3. Open `Local Storage`.
-4. Select the page origin.
-5. Delete `building-person-counter-state-v1`.
+## Возможные ошибки
 
-You can also clear site data for the page from browser settings if needed.
+- сервер недоступен;
+- неверный адрес сервера;
+- ошибка авторизации;
+- неправильный JSON;
+- timeout;
+- браузер блокирует HTTP-запросы из локальной HTML-страницы;
+- камера не разрешает CORS-запросы.
