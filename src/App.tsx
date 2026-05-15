@@ -9,6 +9,7 @@ import {
 import { loadAppState, saveAppState, type AppPersistedState } from './storage/appStorage';
 import { useCurrentCountersPolling } from './hooks/useCurrentCountersPolling';
 import type { CurrentCountersResponse } from './api/types';
+import { uiText } from './config/uiText';
 
 const DEFAULT_SERVER = '192.168.0.197';
 const DEFAULT_PORT = '8080';
@@ -18,7 +19,7 @@ const POLLING_INTERVAL_MS = 5000;
 
 function formatDateTime(value: Date | null): string {
   if (!value) {
-    return '-';
+    return uiText.placeholders.emptyValue;
   }
 
   return value.toLocaleString();
@@ -35,7 +36,7 @@ function parseResetCount(value: string): number | null {
 }
 
 function formatNullableNumber(value: number | null): string {
-  return value === null ? '-' : String(value);
+  return value === null ? uiText.placeholders.emptyValue : String(value);
 }
 
 function normalizeServerInput(value: string): string {
@@ -136,28 +137,28 @@ function App() {
     const normalizedUsername = username.trim();
 
     if (!nextConnection.server) {
-      setLocalError('Server address is required.');
+      setLocalError(uiText.errors.serverRequired);
       setPollingServer(null);
       setPollingEnabled(false);
       return;
     }
 
     if (nextConnection.server.includes('/')) {
-      setLocalError('Server address must not contain a path.');
+      setLocalError(uiText.errors.serverMustNotContainPath);
       setPollingServer(null);
       setPollingEnabled(false);
       return;
     }
 
     if (!isValidPort(nextConnection.port)) {
-      setLocalError('Port must be a number from 1 to 65535.');
+      setLocalError(uiText.errors.invalidPort);
       setPollingServer(null);
       setPollingEnabled(false);
       return;
     }
 
     if (!normalizedUsername) {
-      setLocalError('User is required.');
+      setLocalError(uiText.errors.userRequired);
       setPollingServer(null);
       setPollingEnabled(false);
       return;
@@ -179,7 +180,7 @@ function App() {
     const parsedResetCount = parseResetCount(resetCount);
 
     if (parsedResetCount === null) {
-      setLocalError('Reset count must be a valid number.');
+      setLocalError(uiText.errors.invalidResetCount);
       return;
     }
 
@@ -195,11 +196,11 @@ function App() {
   return (
     <main className="app-shell">
       <section className="counter-panel" aria-labelledby="app-title">
-        <h1 id="app-title">Building People Counter</h1>
+        <h1 id="app-title">{uiText.title}</h1>
 
         <div className="panel-section connection-section">
           <label className="section-label" htmlFor="server-input">
-            Server
+            {uiText.labels.server}
           </label>
           <div className="server-controls">
             <input
@@ -216,14 +217,14 @@ function App() {
               spellCheck={false}
             />
             <button type="button" onClick={handleConnect}>
-              OK
+              {uiText.buttons.ok}
             </button>
           </div>
         </div>
 
-        <div className="connection-settings" aria-label="Connection settings">
+        <div className="connection-settings" aria-label={uiText.connectionSettings}>
           <label htmlFor="port-input">
-            Port
+            {uiText.labels.port}
             <input
               id="port-input"
               type="number"
@@ -234,7 +235,7 @@ function App() {
             />
           </label>
           <label htmlFor="username-input">
-            User
+            {uiText.labels.user}
             <input
               id="username-input"
               type="text"
@@ -245,7 +246,7 @@ function App() {
             />
           </label>
           <label htmlFor="password-input">
-            Password
+            {uiText.labels.password}
             <input
               id="password-input"
               type="password"
@@ -257,15 +258,15 @@ function App() {
         </div>
 
         <div className="panel-section count-section">
-          <span className="section-label">Person Counts</span>
-          <output className="person-count" aria-label="Current person count">
+          <span className="section-label">{uiText.labels.personCounts}</span>
+          <output className="person-count" aria-label={uiText.labels.currentPersonCount}>
             {counterState.currentPeopleCount}
           </output>
         </div>
 
         <div className="panel-section reset-section">
           <label className="section-label" htmlFor="reset-input">
-            Reset Counts
+            {uiText.labels.resetCounts}
           </label>
           <div className="reset-controls">
             <input
@@ -275,37 +276,41 @@ function App() {
               onChange={(event) => setResetCount(event.target.value)}
             />
             <button type="button" onClick={handleReset}>
-              reset
+              {uiText.buttons.reset}
             </button>
           </div>
         </div>
 
-        <div className="status-grid" aria-label="Connection status">
-          <span>Connection status</span>
-          <strong className={`status-pill status-${displayedStatus}`}>{displayedStatus}</strong>
+        <div className="status-grid" aria-label={uiText.labels.connectionStatus}>
+          <span>{uiText.labels.connectionStatus}</span>
+          <strong className={`status-pill status-${displayedStatus}`}>
+            {uiText.statuses[displayedStatus]}
+          </strong>
 
-          <span>Last update time</span>
+          <span>{uiText.labels.lastUpdateTime}</span>
           <strong>{formatDateTime(pollingState.lastUpdateAt)}</strong>
 
-          <span>Error message</span>
-          <strong className={displayedError ? 'error-message' : ''}>{displayedError || '-'}</strong>
+          <span>{uiText.labels.errorMessage}</span>
+          <strong className={displayedError ? 'error-message' : ''}>
+            {displayedError || uiText.placeholders.emptyValue}
+          </strong>
         </div>
 
-        <div className="diagnostics" aria-label="Diagnostics">
+        <div className="diagnostics" aria-label={uiText.labels.diagnostics}>
           <div>
-            <span>Total IN</span>
+            <span>{uiText.labels.totalIn}</span>
             <strong>{formatNullableNumber(latestCounters?.totalIn ?? null)}</strong>
           </div>
           <div>
-            <span>Total OUT</span>
+            <span>{uiText.labels.totalOut}</span>
             <strong>{formatNullableNumber(latestCounters?.totalOut ?? null)}</strong>
           </div>
           <div>
-            <span>Previous Total IN</span>
+            <span>{uiText.labels.previousTotalIn}</span>
             <strong>{formatNullableNumber(counterState.previousTotalIn)}</strong>
           </div>
           <div>
-            <span>Previous Total OUT</span>
+            <span>{uiText.labels.previousTotalOut}</span>
             <strong>{formatNullableNumber(counterState.previousTotalOut)}</strong>
           </div>
         </div>

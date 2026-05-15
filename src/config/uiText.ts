@@ -1,0 +1,41 @@
+export const uiText = {
+  title: 'Building People Counter',
+  connectionSettings: 'Connection settings',
+  labels: {
+    server: 'Server',
+    port: 'Port',
+    user: 'User',
+    password: 'Password',
+    personCounts: 'Person Counts',
+    resetCounts: 'Reset Counts',
+    connectionStatus: 'Connection status',
+    lastUpdateTime: 'Last update time',
+    errorMessage: 'Error message',
+    totalIn: 'Total IN',
+    totalOut: 'Total OUT',
+    previousTotalIn: 'Previous Total IN',
+    previousTotalOut: 'Previous Total OUT',
+    currentPersonCount: 'Current person count',
+    diagnostics: 'Diagnostics',
+  },
+  buttons: {
+    ok: 'OK',
+    reset: 'reset',
+  },
+  statuses: {
+    disconnected: 'disconnected',
+    connecting: 'connecting',
+    connected: 'connected',
+    error: 'error',
+  },
+  errors: {
+    serverRequired: 'Server address is required.',
+    serverMustNotContainPath: 'Server address must not contain a path.',
+    invalidPort: 'Port must be a number from 1 to 65535.',
+    userRequired: 'User is required.',
+    invalidResetCount: 'Reset count must be a valid number.',
+  },
+  placeholders: {
+    emptyValue: '-',
+  },
+} as const;
