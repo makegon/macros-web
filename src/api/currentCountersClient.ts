@@ -3,8 +3,19 @@ import type { CurrentCountersResponse } from './types';
 const CURRENT_COUNTERS_PATH = '/api/objects_counting/current_counters';
 const DEFAULT_TIMEOUT_MS = 15000;
 
-export function buildCurrentCountersUrl(server: string): string {
+export interface CurrentCountersRequestOptions {
+  port?: string;
+  username?: string;
+  password?: string;
+}
+
+function normalizePort(port?: string): string {
+  return port?.trim() ?? '';
+}
+
+export function buildCurrentCountersUrl(server: string, port?: string): string {
   const normalizedServer = server.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+  const normalizedPort = normalizePort(port);
 
   if (!normalizedServer) {
     throw new Error('Server address is required.');
@@ -18,7 +29,13 @@ export function buildCurrentCountersUrl(server: string): string {
     throw new Error('Server address must not contain a path.');
   }
 
-  return `http://${normalizedServer}${CURRENT_COUNTERS_PATH}`;
+  if (normalizedPort && !/^\d+$/.test(normalizedPort)) {
+    throw new Error('Port must be a number.');
+  }
+
+  const serverWithPort = normalizedPort ? `${normalizedServer}:${normalizedPort}` : normalizedServer;
+
+  return `http://${serverWithPort}${CURRENT_COUNTERS_PATH}`;
 }
 
 export function createBasicAuthHeader(username: string, password: string): string {
@@ -29,8 +46,9 @@ export async function fetchCurrentCounters(
   server: string,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   externalSignal?: AbortSignal,
+  options: CurrentCountersRequestOptions = {},
 ): Promise<CurrentCountersResponse> {
-  const url = buildCurrentCountersUrl(server);
+  const url = buildCurrentCountersUrl(server, options.port);
   const controller = new AbortController();
   let didTimeout = false;
   const abortRequest = () => controller.abort();
@@ -50,7 +68,7 @@ export async function fetchCurrentCounters(
       method: 'GET',
       headers: {
         Accept: 'application/json',
-        Authorization: createBasicAuthHeader('root', ''),
+        Authorization: createBasicAuthHeader(options.username ?? 'root', options.password ?? ''),
       },
       cache: 'no-store',
       signal: controller.signal,

@@ -129,6 +129,27 @@ input {
   font-size: 22px;
 }
 
+.connection-settings {
+  display: grid;
+  grid-template-columns: 120px minmax(150px, 1fr) minmax(170px, 1fr);
+  gap: 14px;
+  margin: -12px 28px 0 272px;
+  padding-bottom: 18px;
+}
+
+.connection-settings label {
+  display: grid;
+  gap: 5px;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.connection-settings input {
+  min-height: 36px;
+  font-size: 16px;
+}
+
 .count-section {
   min-height: 158px;
 }
@@ -287,8 +308,14 @@ input {
   }
 
   .server-controls,
-  .reset-controls {
+  .reset-controls,
+  .connection-settings {
     grid-template-columns: 1fr;
+  }
+
+  .connection-settings {
+    margin: -4px 18px 0;
+    padding-bottom: 16px;
   }
 
   .person-count {

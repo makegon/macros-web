@@ -10,6 +10,9 @@ export interface UseCurrentCountersPollingOptions {
   server: string;
   enabled: boolean;
   intervalMs?: number;
+  port?: string;
+  username?: string;
+  password?: string;
   onSuccess: (response: CurrentCountersResponse) => void;
   onError?: (error: Error) => void;
 }
@@ -24,6 +27,9 @@ export function useCurrentCountersPolling({
   server,
   enabled,
   intervalMs = DEFAULT_INTERVAL_MS,
+  port,
+  username,
+  password,
   onSuccess,
   onError,
 }: UseCurrentCountersPollingOptions): CurrentCountersPollingState {
@@ -68,7 +74,11 @@ export function useCurrentCountersPolling({
       }));
 
       try {
-        const response = await fetchCurrentCounters(server, undefined, controller.signal);
+        const response = await fetchCurrentCounters(server, undefined, controller.signal, {
+          port,
+          username,
+          password,
+        });
 
         if (isStopped) {
           return;
@@ -117,7 +127,7 @@ export function useCurrentCountersPolling({
       abortControllerRef.current = null;
       requestInFlightRef.current = false;
     };
-  }, [enabled, intervalMs, server]);
+  }, [enabled, intervalMs, password, port, server, username]);
 
   return state;
 }

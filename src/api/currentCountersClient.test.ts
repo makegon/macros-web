@@ -18,6 +18,18 @@ describe('current counters client', () => {
     );
   });
 
+  it('creates URL from host and separate port', () => {
+    expect(buildCurrentCountersUrl('192.168.0.197', '8081')).toBe(
+      'http://192.168.0.197:8081/api/objects_counting/current_counters',
+    );
+  });
+
+  it('throws a readable error for invalid port', () => {
+    expect(() => buildCurrentCountersUrl('192.168.0.197', 'abc')).toThrow(
+      'Port must be a number.',
+    );
+  });
+
   it('creates URL from address that already includes http protocol', () => {
     expect(buildCurrentCountersUrl('http://192.168.0.197:8080')).toBe(
       'http://192.168.0.197:8080/api/objects_counting/current_counters',
@@ -72,6 +84,31 @@ describe('current counters client', () => {
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Basic cm9vdDo=',
+        }),
+      }),
+    );
+  });
+
+  it('sends custom Basic Auth credentials and port', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: vi.fn().mockResolvedValue({ Channels: [] }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchCurrentCounters('192.168.0.197', 15000, undefined, {
+      port: '9090',
+      username: 'admin',
+      password: 'secret',
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://192.168.0.197:9090/api/objects_counting/current_counters',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: createBasicAuthHeader('admin', 'secret'),
         }),
       }),
     );

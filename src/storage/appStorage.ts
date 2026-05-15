@@ -4,6 +4,9 @@ const STORAGE_KEY = 'building-person-counter-state-v1';
 
 export interface AppPersistedState {
   server: string;
+  port: string;
+  username: string;
+  password: string;
   resetCount: number;
   counterState: CounterState;
   latestCounters: {
@@ -57,19 +60,31 @@ function isLatestCounters(value: unknown): value is AppPersistedState['latestCou
   return isFiniteNumber(candidate.totalIn) && isFiniteNumber(candidate.totalOut);
 }
 
-function isAppPersistedState(value: unknown): value is AppPersistedState {
+function toAppPersistedState(value: unknown): AppPersistedState | null {
   if (typeof value !== 'object' || value === null) {
-    return false;
+    return null;
   }
 
-  const candidate = value as AppPersistedState;
+  const candidate = value as Partial<AppPersistedState>;
 
-  return (
+  if (
     typeof candidate.server === 'string' &&
     isFiniteNumber(candidate.resetCount) &&
     isCounterState(candidate.counterState) &&
     isLatestCounters(candidate.latestCounters)
-  );
+  ) {
+    return {
+      server: candidate.server,
+      port: typeof candidate.port === 'string' ? candidate.port : '8080',
+      username: typeof candidate.username === 'string' ? candidate.username : 'root',
+      password: typeof candidate.password === 'string' ? candidate.password : '',
+      resetCount: candidate.resetCount,
+      counterState: candidate.counterState,
+      latestCounters: candidate.latestCounters,
+    };
+  }
+
+  return null;
 }
 
 export function loadAppState(): AppPersistedState | null {
@@ -88,7 +103,7 @@ export function loadAppState(): AppPersistedState | null {
 
     const parsedState = JSON.parse(rawState) as unknown;
 
-    return isAppPersistedState(parsedState) ? parsedState : null;
+    return toAppPersistedState(parsedState);
   } catch {
     return null;
   }
@@ -135,9 +150,11 @@ export function importStateFromJson(json: string): AppPersistedState {
     throw new Error('Imported state JSON is invalid.');
   }
 
-  if (!isAppPersistedState(parsedState)) {
+  const importedState = toAppPersistedState(parsedState);
+
+  if (!importedState) {
     throw new Error('Imported state has invalid structure.');
   }
 
-  return parsedState;
+  return importedState;
 }

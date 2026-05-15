@@ -30,7 +30,10 @@ function createMemoryStorage(): Storage {
 }
 
 const persistedState: AppPersistedState = {
-  server: '192.168.0.197:8080',
+  server: '192.168.0.197',
+  port: '8080',
+  username: 'root',
+  password: '',
   resetCount: 12,
   counterState: {
     currentPeopleCount: 12,
@@ -70,6 +73,28 @@ describe('appStorage', () => {
     const json = exportStateToJson(persistedState);
 
     expect(importStateFromJson(json)).toEqual(persistedState);
+  });
+
+  it('loads older cached state with default connection settings', () => {
+    const storage = createMemoryStorage();
+    storage.setItem(
+      'building-person-counter-state-v1',
+      JSON.stringify({
+        server: '192.168.0.197:8080',
+        resetCount: 12,
+        counterState: persistedState.counterState,
+        latestCounters: persistedState.latestCounters,
+      }),
+    );
+    vi.stubGlobal('localStorage', storage);
+
+    expect(loadAppState()).toEqual({
+      ...persistedState,
+      server: '192.168.0.197:8080',
+      port: '8080',
+      username: 'root',
+      password: '',
+    });
   });
 
   it('does not break when localStorage is unavailable', () => {
