@@ -50,7 +50,7 @@ export async function fetchCurrentCounters(
       method: 'GET',
       headers: {
         Accept: 'application/json',
-        Authorization: createBasicAuthHeader('Root', ''),
+        Authorization: createBasicAuthHeader('root', ''),
       },
       cache: 'no-store',
       signal: controller.signal,

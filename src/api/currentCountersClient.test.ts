@@ -52,8 +52,29 @@ describe('current counters client', () => {
     );
   });
 
-  it('creates Basic Auth header for Root and empty password', () => {
-    expect(createBasicAuthHeader('Root', '')).toBe('Basic Um9vdDo=');
+  it('creates Basic Auth header for root and empty password', () => {
+    expect(createBasicAuthHeader('root', '')).toBe('Basic cm9vdDo=');
+  });
+
+  it('sends Basic Auth header with lowercase root username', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: vi.fn().mockResolvedValue({ Channels: [] }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchCurrentCounters('192.168.0.197:8080');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://192.168.0.197:8080/api/objects_counting/current_counters',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Basic cm9vdDo=',
+        }),
+      }),
+    );
   });
 
   it('turns HTTP 500 into a readable error', async () => {
