@@ -1,8 +1,8 @@
 :root {
   font-family:
     "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  color: #1f2937;
-  background: #edf3f8;
+  color: #1f2933;
+  background: #e7eef5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -25,151 +25,157 @@ input {
 }
 
 button {
-  min-height: 42px;
-  padding: 0 28px;
-  border: 2px solid #176db9;
-  border-radius: 7px;
-  color: #144c82;
-  background: #ffffff;
+  min-height: 40px;
+  padding: 0 24px;
+  border: 1px solid #0067c0;
+  border-radius: 4px;
+  color: #063f73;
+  background: linear-gradient(#ffffff, #f7fbff);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 70%);
   cursor: pointer;
 }
 
 button:hover {
-  background: #f2f8ff;
+  border-color: #005ba8;
+  background: #eef7ff;
 }
 
 button:active {
-  background: #e2f0ff;
+  background: #dceeff;
 }
 
 button:focus-visible,
 input:focus-visible {
-  outline: 3px solid rgb(23 109 185 / 25%);
+  outline: 2px solid #4fa3ea;
   outline-offset: 2px;
 }
 
 input {
   width: 100%;
-  min-height: 42px;
-  padding: 8px 12px;
-  border: 1px solid #c8d2df;
-  border-radius: 7px;
+  min-height: 40px;
+  padding: 7px 11px;
+  border: 1px solid #b9c5d2;
+  border-radius: 4px;
   color: #111827;
   background: #ffffff;
-  box-shadow: inset 0 1px 2px rgb(15 23 42 / 7%);
+  box-shadow: inset 0 1px 2px rgb(15 23 42 / 8%);
 }
 
 .app-shell {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 28px;
+  padding: 20px;
 }
 
 .counter-panel {
-  width: min(100%, 820px);
-  min-height: 620px;
-  padding: 30px 34px 28px;
-  border: 1px solid #cfd8e3;
-  border-radius: 8px;
+  width: min(100%, 900px);
+  min-height: 650px;
+  padding: 0;
+  border: 1px solid #bac6d1;
+  border-radius: 6px;
   background: #ffffff;
-  box-shadow:
-    0 18px 45px rgb(30 41 59 / 12%),
-    inset 0 0 0 1px rgb(255 255 255 / 80%);
+  box-shadow: 0 18px 38px rgb(25 40 60 / 16%);
+  overflow: hidden;
 }
 
 .counter-panel h1 {
-  margin: 0 0 26px;
-  font-size: 30px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid #d7dee7;
+  color: #111827;
+  background: #f6f9fc;
+  font-size: 24px;
   font-weight: 600;
   line-height: 1.2;
 }
 
 .panel-section {
   display: grid;
-  grid-template-columns: minmax(170px, 220px) 1fr;
-  gap: 20px;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
   align-items: center;
-  padding: 28px 6px;
-  border-top: 1px solid #d9e1eb;
+  margin: 0 28px;
+  padding: 24px 0;
+  border-top: 1px solid #d9e1e9;
 }
 
 .panel-section:first-of-type {
   border-top: 0;
-  padding-top: 4px;
 }
 
 .section-label {
+  color: #151b23;
   font-size: 28px;
   font-weight: 700;
-  line-height: 1.15;
-  color: #111827;
+  line-height: 1.1;
 }
 
 .server-controls {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 24px;
+  grid-template-columns: minmax(300px, 1fr) 112px;
+  gap: 18px;
   align-items: center;
 }
 
 .server-controls input {
-  font-size: 24px;
+  font-size: 22px;
 }
 
 .server-controls button {
-  min-width: 120px;
-  font-size: 24px;
+  font-size: 22px;
 }
 
 .count-section {
-  min-height: 150px;
+  min-height: 158px;
 }
 
 .person-count {
   display: block;
   justify-self: center;
-  min-width: 210px;
-  color: #1267bf;
-  font-size: 76px;
+  min-width: 230px;
+  color: #0969c3;
+  font-size: 92px;
   font-weight: 700;
-  line-height: 1;
+  line-height: 0.95;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .reset-section {
-  align-items: start;
+  align-items: center;
 }
 
 .reset-controls {
   display: grid;
-  grid-template-columns: minmax(110px, 170px) minmax(180px, 260px);
-  gap: 24px;
+  grid-template-columns: 140px 220px;
+  gap: 18px;
   align-items: center;
   justify-content: end;
 }
 
 .reset-controls input {
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .reset-controls button {
   width: 100%;
-  font-size: 22px;
-}
-
-.status-grid,
-.diagnostics {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid #d9e1eb;
+  font-size: 21px;
+  text-transform: lowercase;
 }
 
 .status-grid {
   display: grid;
-  grid-template-columns: minmax(150px, 210px) 1fr;
-  gap: 10px 18px;
+  grid-template-columns: 170px 1fr;
+  gap: 8px 18px;
+  margin: 4px 28px 0;
+  padding: 16px 0 0;
+  border-top: 1px solid #d9e1e9;
   color: #4b5563;
+  font-size: 15px;
 }
 
 .status-grid strong {
@@ -181,45 +187,54 @@ input {
 
 .status-pill {
   width: fit-content;
-  padding: 3px 9px;
-  border-radius: 6px;
-  background: #eef2f7;
+  min-width: 92px;
+  padding: 2px 9px 3px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #f3f6fa;
+  text-align: center;
 }
 
 .status-disconnected {
-  color: #4b5563;
+  color: #475569;
 }
 
 .status-connecting {
-  color: #8a5a00;
+  border-color: #e5c66f;
+  color: #765000;
   background: #fff7df;
 }
 
 .status-connected {
+  border-color: #9ad2ad;
   color: #126032;
   background: #e8f7ee;
 }
 
 .status-error,
 .error-message {
-  color: #a52626;
+  color: #b42318;
 }
 
 .status-error {
-  background: #fdecec;
+  border-color: #efb5ae;
+  background: #fdeceb;
 }
 
 .diagnostics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
+  margin: 14px 28px 24px;
+  padding-top: 14px;
+  border-top: 1px solid #d9e1e9;
 }
 
 .diagnostics div {
   min-width: 0;
-  padding: 12px;
-  border: 1px solid #d9e1eb;
-  border-radius: 7px;
+  padding: 10px 12px;
+  border: 1px solid #d7e0ea;
+  border-radius: 4px;
   background: #f8fafc;
 }
 
@@ -230,34 +245,41 @@ input {
 
 .diagnostics span {
   color: #5b6778;
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .diagnostics strong {
-  margin-top: 4px;
+  margin-top: 3px;
   color: #111827;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 
 @media (max-width: 720px) {
   .app-shell {
-    padding: 16px;
+    padding: 12px;
   }
 
   .counter-panel {
     min-height: auto;
-    padding: 22px;
   }
 
   .counter-panel h1 {
-    font-size: 25px;
+    height: auto;
+    min-height: 52px;
+    padding: 14px 18px;
+    font-size: 22px;
   }
 
   .panel-section,
   .status-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+    margin-inline: 18px;
   }
 
   .section-label {
@@ -269,19 +291,15 @@ input {
     grid-template-columns: 1fr;
   }
 
-  .server-controls button,
-  .reset-controls button {
-    width: 100%;
-  }
-
   .person-count {
     justify-self: start;
     min-width: 0;
-    font-size: 64px;
+    font-size: 68px;
   }
 
   .diagnostics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-inline: 18px;
   }
 }
 
