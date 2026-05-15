@@ -57,10 +57,12 @@ describe('current counters client', () => {
       ),
     );
 
-    const request = fetchCurrentCounters('192.168.0.197:8080', 1000);
+    const request = expect(fetchCurrentCounters('192.168.0.197:8080', 1000)).rejects.toThrow(
+      'Camera API request timed out after 1000 ms.',
+    );
     await vi.advanceTimersByTimeAsync(1000);
 
-    await expect(request).rejects.toThrow('Camera API request timed out after 1000 ms.');
+    await request;
   });
 
   it('turns invalid JSON into a readable error', async () => {
