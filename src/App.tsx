@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { aggregateInOut } from './domain/aggregation';
+import { aggregateInOut, validateCountersResponse } from './domain/aggregation';
 import {
   applyCounters,
   createInitialCounterState,
@@ -35,6 +35,10 @@ function formatNullableNumber(value: number | null): string {
   return value === null ? '-' : String(value);
 }
 
+function normalizeServerInput(value: string): string {
+  return value.trim().replace(/\/+$/, '');
+}
+
 function App() {
   const [storedState] = useState<AppPersistedState | null>(() => loadAppState());
   const [server, setServer] = useState(storedState?.server ?? DEFAULT_SERVER);
@@ -60,6 +64,12 @@ function App() {
   }, [counterState, latestCounters, resetCount, server]);
 
   const handlePollingSuccess = useCallback((response: CurrentCountersResponse) => {
+    const validationErrors = validateCountersResponse(response);
+
+    if (validationErrors.length > 0) {
+      throw new Error(validationErrors.join(' '));
+    }
+
     const counters = aggregateInOut(response);
 
     setLatestCounters(counters);
@@ -80,7 +90,7 @@ function App() {
   });
 
   const handleConnect = () => {
-    const normalizedServer = server.trim().replace(/\/+$/, '');
+    const normalizedServer = normalizeServerInput(server);
 
     if (!normalizedServer) {
       setLocalError('Server address is required.');

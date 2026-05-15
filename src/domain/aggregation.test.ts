@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CurrentCountersResponse } from '../api/types';
-import { aggregateInOut } from './aggregation';
+import { aggregateInOut, validateCountersResponse } from './aggregation';
 
 describe('aggregateInOut', () => {
   it('sums IN and OUT counters across two cameras', () => {
@@ -97,5 +97,71 @@ describe('aggregateInOut', () => {
     }
 
     expect(aggregateInOut(malformedResponses[5])).toEqual({ totalIn: 0, totalOut: 0 });
+  });
+});
+
+describe('validateCountersResponse', () => {
+  it('returns no errors for a valid response', () => {
+    expect(
+      validateCountersResponse({
+        Channels: [
+          {
+            Zones: [
+              { Name: 'IN', CurrentCounts: { Person: 1 } },
+              { Name: 'OUT', CurrentCounts: { Person: 1 } },
+            ],
+          },
+        ],
+      }),
+    ).toEqual([]);
+  });
+
+  it('reports missing, non-array, and empty Channels', () => {
+    expect(validateCountersResponse({})).toEqual(['Camera API response is missing Channels.']);
+    expect(validateCountersResponse({ Channels: 'bad' })).toEqual([
+      'Camera API response Channels must be an array.',
+    ]);
+    expect(validateCountersResponse({ Channels: [] })).toEqual([
+      'Camera API response Channels is empty.',
+    ]);
+  });
+
+  it('reports missing, non-array, and empty Zones', () => {
+    expect(
+      validateCountersResponse({
+        Channels: [{ Id: 'camera-1' }],
+      }),
+    ).toEqual(['Channel 1 is missing Zones.']);
+    expect(
+      validateCountersResponse({
+        Channels: [{ Zones: 'bad' }],
+      }),
+    ).toEqual(['Channel 1 Zones must be an array.']);
+    expect(
+      validateCountersResponse({
+        Channels: [{ Zones: [] }],
+      }),
+    ).toEqual(['Channel 1 Zones is empty.']);
+  });
+
+  it('reports invalid CurrentCounts and Person for IN and OUT zones', () => {
+    expect(
+      validateCountersResponse({
+        Channels: [
+          {
+            Zones: [
+              { Name: 'IN' },
+              { Name: 'OUT', CurrentCounts: {} },
+              { Name: 'IN', CurrentCounts: { Person: '1' } },
+              { Name: 'LOBBY', CurrentCounts: { Person: 'ignored' } },
+            ],
+          },
+        ],
+      }),
+    ).toEqual([
+      'Channel 1 Zone 1 (IN) is missing CurrentCounts.',
+      'Channel 1 Zone 2 (OUT) is missing Person.',
+      'Channel 1 Zone 3 (IN) Person must be a number.',
+    ]);
   });
 });

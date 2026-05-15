@@ -10,6 +10,14 @@ export function buildCurrentCountersUrl(server: string): string {
     throw new Error('Server address is required.');
   }
 
+  if (/\s/.test(normalizedServer)) {
+    throw new Error('Server address must not contain spaces.');
+  }
+
+  if (normalizedServer.includes('/')) {
+    throw new Error('Server address must not contain a path.');
+  }
+
   return `http://${normalizedServer}${CURRENT_COUNTERS_PATH}`;
 }
 

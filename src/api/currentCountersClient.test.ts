@@ -24,6 +24,34 @@ describe('current counters client', () => {
     );
   });
 
+  it('creates URL from address with https protocol', () => {
+    expect(buildCurrentCountersUrl('https://192.168.0.197:8080')).toBe(
+      'http://192.168.0.197:8080/api/objects_counting/current_counters',
+    );
+  });
+
+  it('trims spaces around the server address', () => {
+    expect(buildCurrentCountersUrl(' 192.168.0.197:8080 ')).toBe(
+      'http://192.168.0.197:8080/api/objects_counting/current_counters',
+    );
+  });
+
+  it('throws a readable error for empty server address', () => {
+    expect(() => buildCurrentCountersUrl('   ')).toThrow('Server address is required.');
+  });
+
+  it('throws a readable error when server address contains internal spaces', () => {
+    expect(() => buildCurrentCountersUrl('192.168.0.197: 8080')).toThrow(
+      'Server address must not contain spaces.',
+    );
+  });
+
+  it('throws a readable error when server address contains a path', () => {
+    expect(() => buildCurrentCountersUrl('192.168.0.197:8080/api')).toThrow(
+      'Server address must not contain a path.',
+    );
+  });
+
   it('creates Basic Auth header for Root and empty password', () => {
     expect(createBasicAuthHeader('Root', '')).toBe('Basic Um9vdDo=');
   });
@@ -40,6 +68,14 @@ describe('current counters client', () => {
 
     await expect(fetchCurrentCounters('192.168.0.197:8080')).rejects.toThrow(
       'Camera API returned HTTP 500 Internal Server Error.',
+    );
+  });
+
+  it('turns network errors into a readable error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+
+    await expect(fetchCurrentCounters('192.168.0.197:8080')).rejects.toThrow(
+      'Network error while requesting camera API: Failed to fetch',
     );
   });
 
